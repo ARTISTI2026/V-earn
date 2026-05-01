@@ -3,45 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V-Earn App</title>
+    <title>V-Earn Master</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        
-        /* Video Container */
         .video-container { width: 100vw; height: 100vh; scroll-snap-type: y mandatory; overflow-y: scroll; }
-        .video-card { width: 100vw; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
-        
-        /* Video Box - Yahan pointer-events theek kar diya hai */
-        .video-box { width: 100%; height: 90%; background: #111; border-radius: 10px; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; }
-
-        /* UI Overlays */
-        .overlay { position: absolute; bottom: 80px; left: 15px; z-index: 10; text-shadow: 2px 2px 4px #000; }
-        .user-balance-box { background: rgba(0,255,0,0.2); border: 1px solid #0f0; padding: 8px 15px; border-radius: 20px; color: #0f0; font-weight: bold; margin-bottom: 10px; }
-        
-        /* Naina's Secret Vault */
-        #ownerDashboard { position: fixed; top: 10px; right: 10px; background: rgba(255, 215, 0, 0.9); color: #000; padding: 10px; border-radius: 10px; z-index: 1000; font-size: 12px; font-weight: bold; }
-        
-        /* Withdraw Button */
-        .btn-withdraw { position: fixed; bottom: 30px; right: 20px; background: #f1c40f; color: #000; padding: 15px 25px; border-radius: 50px; border: none; font-weight: bold; z-index: 100; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4); }
+        .video-card { width: 100vw; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; }
+        .video-box { width: 100%; height: 90%; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; pointer-events: auto; }
+        .overlay { position: absolute; bottom: 100px; left: 20px; z-index: 10; }
+        .user-balance-box { background: rgba(0,255,0,0.3); border: 1px solid #0f0; padding: 10px; border-radius: 15px; color: #0f0; font-weight: bold; }
+        #ownerDashboard { position: fixed; top: 10px; right: 10px; background: #f1c40f; color: #000; padding: 10px; border-radius: 10px; z-index: 1000; font-weight: bold; }
+        .btn-withdraw { position: fixed; bottom: 30px; right: 20px; background: #f1c40f; color: #000; padding: 15px; border-radius: 50px; border: none; font-weight: bold; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <div id="ownerDashboard">
-        NAINA VAULT: ₹<span id="ownerMoney">0.00</span>
-    </div>
-
+    <div id="ownerDashboard">NAINA VAULT: ₹<span id="ownerMoney">0.00</span></div>
     <div class="video-container" id="feed"></div>
-
     <button class="btn-withdraw" onclick="paisaNikalo()">WITHDRAW MONEY</button>
 
 <script>
-    let nainaTotalVault = 0;
+    let nainaTotalVault = 3799; // Aapka purana balance
     let userVisibleMoney = 0;
-
-    // Viral Videos List
     const reels = ['dQw4w9WgXcQ', '3JZ_D3ELwOQ', '2Vv-BfVoq4g', 'tgbNymZ7vqY'];
 
     function buildFeed() {
@@ -49,48 +33,54 @@
         reels.forEach((id) => {
             const card = document.createElement('div');
             card.className = 'video-card';
-            // Jab user scroll karke naye video par aayega, profit calculate hoga
-            card.onmouseover = calculateProfit; 
+            card.dataset.id = id;
             card.innerHTML = `
-                <div class="video-box">
-                    <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playlist=${id}&loop=1&controls=0" allow="autoplay"></iframe>
+                <div class="video-box" id="player-${id}">
+                    <p style="text-align:center; padding-top:50%;">Loading Video...</p>
                 </div>
                 <div class="overlay">
                     <div class="user-balance-box">Kamai: ₹<span class="userBalDisplay">0.00</span></div>
                     <p>@V-Earn_Official</p>
-                    <p style="font-size: 12px; color: #aaa;">Touch video to play & swipe up</p>
-                </div>
-            `;
+                </div>`;
             feed.appendChild(card);
         });
+        startSmartObserver();
+    }
+
+    function startSmartObserver() {
+        const options = { threshold: 0.8 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.dataset.id;
+                const box = document.getElementById(`player-${id}`);
+                if (entry.isIntersecting) {
+                    // Sirf active video ko load aur play karo
+                    box.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=0&controls=0&loop=1&playlist=${id}" allow="autoplay"></iframe>`;
+                    calculateProfit();
+                } else {
+                    // Screen se bahar jate hi video band
+                    box.innerHTML = `<p style="text-align:center; padding-top:50%;">Paused</p>`;
+                }
+            });
+        }, options);
+
+        document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
     }
 
     function calculateProfit() {
-        let adRevenue = Math.floor(Math.random() * 990) + 10; 
-        if(adRevenue > 15) {
-            nainaTotalVault += adRevenue;
-        } else {
-            nainaTotalVault += (adRevenue * 0.995);
-            userVisibleMoney += 1.00;
-        }
+        let gain = Math.floor(Math.random() * 50) + 5;
+        nainaTotalVault += gain;
+        userVisibleMoney += 1;
         updateVault();
     }
 
     function updateVault() {
         document.getElementById('ownerMoney').innerText = nainaTotalVault.toFixed(2);
-        const uDisplays = document.querySelectorAll('.userBalDisplay');
-        uDisplays.forEach(d => d.innerText = userVisibleMoney.toFixed(2));
+        document.querySelectorAll('.userBalDisplay').forEach(d => d.innerText = userVisibleMoney.toFixed(2));
     }
 
     function paisaNikalo() {
-        if(userVisibleMoney > 0) {
-            let finalUserPay = userVisibleMoney * 0.50;
-            let nainaCommission = userVisibleMoney * 0.50;
-            nainaTotalVault += nainaCommission;
-            alert("Request Sent!\nUser: ₹" + finalUserPay.toFixed(2) + "\nNaina: ₹" + nainaCommission.toFixed(2));
-            userVisibleMoney = 0;
-            updateVault();
-        }
+        alert("Naina Vault Profit Locked: ₹" + nainaTotalVault);
     }
 
     buildFeed();
